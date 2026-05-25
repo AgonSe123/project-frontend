@@ -1,0 +1,46 @@
+import { Routes, Route } from 'react-router-dom';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { AdminLayout } from '@/components/layout/Sidebar';
+import { ProtectedRoute } from './ProtectedRoute';
+import { HomePage } from '@/pages/HomePage';
+import { ProductsPage } from '@/pages/ProductsPage';
+import { ProductDetailPage } from '@/pages/ProductDetailPage';
+import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
+import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { DashboardPage } from '@/pages/admin/DashboardPage';
+import { AdminProductsPage } from '@/pages/admin/AdminProductsPage';
+import { AdminRetailersPage } from '@/pages/admin/AdminRetailersPage';
+import { AdminScrapersPage } from '@/pages/admin/AdminScrapersPage';
+import { ScraperJobsPage } from '@/pages/admin/ScraperJobsPage';
+import { ScraperLogsPage } from '@/pages/admin/ScraperLogsPage';
+
+export function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="products/:productId" element={<ProductDetailPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
+        <Route path="verify-email" element={<VerifyEmailPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
+
+        <Route element={<ProtectedRoute adminOnly />}>
+          <Route path="admin" element={<AdminLayout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="products" element={<AdminProductsPage />} />
+            <Route path="retailers" element={<AdminRetailersPage />} />
+            <Route path="scrapers" element={<AdminScrapersPage />} />
+            <Route path="scrapers/:scraperId/jobs" element={<ScraperJobsPage />} />
+            <Route path="jobs/:jobId/logs" element={<ScraperLogsPage />} />
+          </Route>
+        </Route>
+      </Route>
+    </Routes>
+  );
+}
