@@ -1,0 +1,45 @@
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+
+export function HomePage() {
+  return (
+    <div>
+      <h1 className="page-title">Compare product prices across retailers</h1>
+      <p className="page-subtitle">
+        Search products, compare retailer pricing, and manage scrapers from the admin dashboard.
+      </p>
+
+      <div className="grid-3 mt-2">
+        <Card title="Products">
+          <p className="text-muted">
+            Browse the catalog and compare prices from multiple retailers for each product.
+          </p>
+          <Link to="/products">
+            <Button className="mt-1">Browse products</Button>
+          </Link>
+        </Card>
+        <Card title="Users">
+          <p className="text-muted">
+            Register, verify your email, and reset your password when needed.
+          </p>
+          <Link to="/register">
+            <Button variant="secondary" className="mt-1">
+              Create account
+            </Button>
+          </Link>
+        </Card>
+        <Card title="Admin">
+          <p className="text-muted">
+            Admins manage products, retailers, scrapers, jobs, and scrape logs.
+          </p>
+          <Link to="/admin">
+            <Button variant="secondary" className="mt-1">
+              Open dashboard
+            </Button>
+          </Link>
+        </Card>
+      </div>
+    </div>
+  );
+}
