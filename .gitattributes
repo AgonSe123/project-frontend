@@ -1,0 +1,5 @@
+# GitHub language stats
+*.html linguist-language=HTML
+*.css linguist-language=CSS
+*.jsx linguist-language=JavaScript
+*.js linguist-language=JavaScript
