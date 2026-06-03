@@ -13,14 +13,14 @@ export function Header() {
           TechScout
         </Link>
         <nav className="main-nav">
-          <NavLink to="/products">Products</NavLink>
-          {isAdmin && <NavLink to="/admin">Admin</NavLink>}
+          {user && <NavLink to="/products">Products</NavLink>}
+          {user && isAdmin && <NavLink to="/admin">Admin</NavLink>}
         </nav>
         <div className="header-actions">
           {user ? (
             <>
               <span className="user-email">{user.email}</span>
-              {!user.isEmailVerified && (
+              {user.is_verified === false && (
                 <span className="verify-hint">Email not verified</span>
               )}
               <Button variant="ghost" onClick={() => logout()}>

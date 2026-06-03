@@ -1,18 +1,16 @@
 import { apiRequest } from './client';
 
+function asArray(data) {
+  return data ?? [];
+}
+
 export const retailersApi = {
-  list: () => apiRequest('/retailers'),
+  list: async () => asArray(await apiRequest('/retailers')),
 
   getById: (retailerId) => apiRequest(`/retailers/${retailerId}`),
 
-  create: (retailer) =>
+  save: (retailer) =>
     apiRequest('/retailers', {
-      method: 'POST',
-      body: JSON.stringify(retailer),
-    }),
-
-  update: (retailerId, retailer) =>
-    apiRequest(`/retailers/${retailerId}`, {
       method: 'PUT',
       body: JSON.stringify(retailer),
     }),

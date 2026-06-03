@@ -60,7 +60,6 @@ export function LoginPage() {
             <Button type="submit" loading={loading}>
               Log in
             </Button>
-            <Link to="/forgot-password">Forgot password?</Link>
           </div>
         </form>
         <p className="mt-2 text-muted">

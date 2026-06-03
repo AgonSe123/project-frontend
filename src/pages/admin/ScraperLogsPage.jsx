@@ -5,6 +5,7 @@ import { ApiClientError } from '@/api/client';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Table } from '@/components/ui/Table';
+
 function logTone(level) {
   switch (level) {
     case 'ERROR':
@@ -19,34 +20,33 @@ function logTone(level) {
 }
 
 export function ScraperLogsPage() {
-  const { jobId } = useParams();
-  const id = Number(jobId);
+  const { retailerId, jobId } = useParams();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!id || Number.isNaN(id)) return;
+    if (!retailerId || !jobId) return;
     scrapersApi
-      .getJobLogs(id)
+      .getJobLogs(retailerId, jobId)
       .then(setLogs)
       .catch((err) =>
         setError(err instanceof ApiClientError ? err.message : 'Failed to load logs'),
       )
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [retailerId, jobId]);
 
   return (
     <div>
-      <Link to="/admin/scrapers">← Scrapers</Link>
+      <Link to={`/admin/scrapers/${retailerId}/jobs`}>← Jobs</Link>
       <h1 className="page-title mt-1">Scrape logs</h1>
-      <p className="page-subtitle">Job #{id}</p>
+      <p className="page-subtitle">Job {jobId}</p>
       {error && <div className="error-banner">{error}</div>}
       {loading ? (
         <LoadingSpinner />
       ) : (
         <Table
-          keyField="logId"
+          keyField="id"
           data={logs}
           columns={[
             {
@@ -57,7 +57,7 @@ export function ScraperLogsPage() {
             {
               key: 'level',
               header: 'Level',
-              render: (r) => <Badge tone={logTone(r.logLevel)}>{r.logLevel}</Badge>,
+              render: (r) => <Badge tone={logTone(r.log_level)}>{r.log_level}</Badge>,
             },
             { key: 'message', header: 'Message', render: (r) => r.message },
           ]}

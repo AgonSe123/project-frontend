@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { productsApi } from '@/api/products';
+import { retailersApi } from '@/api/retailers';
 import { ApiClientError } from '@/api/client';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -16,31 +17,38 @@ function formatPrice(cents) {
 
 export function ProductDetailPage() {
   const { productId } = useParams();
-  const id = Number(productId);
   const [product, setProduct] = useState(null);
+  const [retailers, setRetailers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!id || Number.isNaN(id)) return;
+    if (!productId) return;
     setLoading(true);
-    productsApi
-      .getById(id)
-      .then(setProduct)
+    Promise.all([productsApi.getById(productId), retailersApi.list()])
+      .then(([p, r]) => {
+        setProduct(p);
+        setRetailers(r);
+      })
       .catch((err) =>
         setError(err instanceof ApiClientError ? err.message : 'Failed to load'),
       )
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [productId]);
+
+  const retailerNames = useMemo(() => {
+    const map = new Map(retailers.map((r) => [r.id, r.name]));
+    return map;
+  }, [retailers]);
+
+  const prices = product?.product_prices ?? [];
 
   const lowestPriceId = useMemo(() => {
-    if (!product?.prices?.length) return null;
-    const available = product.prices.filter((p) => p.availabilityStatus);
+    if (!prices.length) return null;
+    const available = prices.filter((p) => p.availability);
     if (!available.length) return null;
-    return available.reduce((min, p) =>
-      p.price < min.price ? p : min,
-    ).priceId;
-  }, [product]);
+    return available.reduce((min, p) => (p.price < min.price ? p : min)).id;
+  }, [prices]);
 
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="error-banner">{error}</div>;
@@ -70,21 +78,24 @@ export function ProductDetailPage() {
 
       <div className="price-table">
         <Table
-          keyField="priceId"
-          data={product.prices ?? []}
+          keyField="id"
+          data={prices}
           emptyMessage="No retailer prices yet."
           columns={[
             {
               key: 'retailer',
               header: 'Retailer',
               render: (row) =>
-                row.retailer?.name ?? `Retailer #${row.retailerId}`,
+                row.retailer?.name ??
+                (row.retailer_id
+                  ? retailerNames.get(row.retailer_id) ?? row.retailer_id
+                  : 'Unknown retailer'),
             },
             {
               key: 'price',
               header: 'Price',
               render: (row) => (
-                <span className={row.priceId === lowestPriceId ? 'lowest' : ''}>
+                <span className={row.id === lowestPriceId ? 'lowest' : ''}>
                   {formatPrice(row.price)}
                 </span>
               ),
@@ -93,15 +104,18 @@ export function ProductDetailPage() {
               key: 'availability',
               header: 'Availability',
               render: (row) => (
-                <Badge tone={row.availabilityStatus ? 'success' : 'danger'}>
-                  {row.availabilityStatus ? 'In stock' : 'Unavailable'}
+                <Badge tone={row.availability ? 'success' : 'danger'}>
+                  {row.availability ? 'In stock' : 'Unavailable'}
                 </Badge>
               ),
             },
             {
               key: 'updated',
               header: 'Last updated',
-              render: (row) => new Date(row.lastUpdated).toLocaleString(),
+              render: (row) =>
+                row.last_updated
+                  ? new Date(row.last_updated).toLocaleString()
+                  : '—',
             },
           ]}
         />

@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Table } from '@/components/ui/Table';
+
 const emptyForm = {
   name: '',
   description: '',
@@ -38,13 +39,13 @@ export function AdminProductsPage() {
   }, []);
 
   function startEdit(p) {
-    setEditingId(p.productId);
+    setEditingId(p.id);
     setForm({
-      name: p.name,
-      description: p.description,
-      brand: p.brand,
-      category: p.category,
-      specifications: p.specifications,
+      name: p.name ?? '',
+      description: p.description ?? '',
+      brand: p.brand ?? '',
+      category: p.category ?? '',
+      specifications: p.specifications ?? '',
     });
   }
 
@@ -58,11 +59,7 @@ export function AdminProductsPage() {
     setSaving(true);
     setError('');
     try {
-      if (editingId) {
-        await productsApi.update(editingId, form);
-      } else {
-        await productsApi.create(form);
-      }
+      await productsApi.save(editingId ? { id: editingId, ...form } : form);
       cancelEdit();
       await load();
     } catch (err) {
@@ -72,10 +69,10 @@ export function AdminProductsPage() {
     }
   }
 
-  async function handleDelete(productId) {
+  async function handleDelete(id) {
     if (!confirm('Delete this product?')) return;
     try {
-      await productsApi.delete(productId);
+      await productsApi.delete(id);
       await load();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Delete failed');
@@ -114,7 +111,7 @@ export function AdminProductsPage() {
         <LoadingSpinner />
       ) : (
         <Table
-          keyField="productId"
+          keyField="id"
           data={products}
           columns={[
             { key: 'name', header: 'Name', render: (r) => r.name },
@@ -128,7 +125,7 @@ export function AdminProductsPage() {
                   <Button variant="secondary" onClick={() => startEdit(r)}>
                     Edit
                   </Button>
-                  <Button variant="danger" onClick={() => handleDelete(r.productId)}>
+                  <Button variant="danger" onClick={() => handleDelete(r.id)}>
                     Delete
                   </Button>
                 </div>

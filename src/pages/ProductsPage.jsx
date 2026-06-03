@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { productsApi } from '@/api/products';
 import { ApiClientError } from '@/api/client';
@@ -16,26 +16,35 @@ export function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  async function load(filters) {
+  useEffect(() => {
     setLoading(true);
     setError('');
-    try {
-      const data = await productsApi.list(filters);
-      setProducts(data);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to load products');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    load();
+    productsApi
+      .list()
+      .then(setProducts)
+      .catch((err) =>
+        setError(err instanceof ApiClientError ? err.message : 'Failed to load products'),
+      )
+      .finally(() => setLoading(false));
   }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const cat = category.trim().toLowerCase();
+    return products.filter((p) => {
+      const matchesSearch =
+        !q ||
+        [p.name, p.brand, p.description]
+          .filter(Boolean)
+          .some((v) => v.toLowerCase().includes(q));
+      const matchesCategory =
+        !cat || (p.category ?? '').toLowerCase().includes(cat);
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, search, category]);
 
   function handleSearch(e) {
     e.preventDefault();
-    load({ search: search || undefined, category: category || undefined });
   }
 
   return (
@@ -58,25 +67,25 @@ export function ProductsPage() {
           value={category}
           onChange={(e) => setCategory(e.target.value)}
         />
-        <Button type="submit">Search</Button>
+        <Button type="submit">Filter</Button>
       </form>
 
       {error && <div className="error-banner">{error}</div>}
       {loading ? (
         <LoadingSpinner />
-      ) : products.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <p className="text-muted">No products found.</p>
       ) : (
         <div className="product-grid">
-          {products.map((p) => (
-            <Card key={p.productId}>
+          {filtered.map((p) => (
+            <Card key={p.id}>
               <div className="product-card-head">
                 <h3>{p.name}</h3>
                 <Badge tone="info">{p.category}</Badge>
               </div>
               <p className="text-muted">{p.brand}</p>
               <p className="product-desc">{p.description}</p>
-              <Link to={`/products/${p.productId}`}>
+              <Link to={`/products/${p.id}`}>
                 <Button variant="secondary">View prices</Button>
               </Link>
             </Card>

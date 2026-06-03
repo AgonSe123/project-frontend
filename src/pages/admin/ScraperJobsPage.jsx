@@ -6,13 +6,15 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Table } from '@/components/ui/Table';
+
 function jobTone(status) {
   switch (status) {
-    case 'COMPLETED':
+    case 'SUCCESSFUL':
       return 'success';
     case 'RUNNING':
       return 'warning';
     case 'FAILED':
+    case 'INTERRUPTED':
       return 'danger';
     default:
       return 'default';
@@ -20,37 +22,36 @@ function jobTone(status) {
 }
 
 export function ScraperJobsPage() {
-  const { scraperId } = useParams();
-  const id = Number(scraperId);
+  const { retailerId } = useParams();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!id || Number.isNaN(id)) return;
+    if (!retailerId) return;
     scrapersApi
-      .getJobs(id)
+      .getJobs(retailerId)
       .then(setJobs)
       .catch((err) =>
         setError(err instanceof ApiClientError ? err.message : 'Failed to load jobs'),
       )
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [retailerId]);
 
   return (
     <div>
       <Link to="/admin/scrapers">← Back to scrapers</Link>
       <h1 className="page-title mt-1">Scrape jobs</h1>
-      <p className="page-subtitle">Scraper #{id} — view logs for each job.</p>
+      <p className="page-subtitle">Retailer {retailerId}</p>
       {error && <div className="error-banner">{error}</div>}
       {loading ? (
         <LoadingSpinner />
       ) : (
         <Table
-          keyField="jobId"
+          keyField="id"
           data={jobs}
           columns={[
-            { key: 'id', header: 'Job ID', render: (r) => r.jobId },
+            { key: 'id', header: 'Job ID', render: (r) => r.id },
             {
               key: 'status',
               header: 'Status',
@@ -59,19 +60,20 @@ export function ScraperJobsPage() {
             {
               key: 'start',
               header: 'Started',
-              render: (r) => new Date(r.startTime).toLocaleString(),
+              render: (r) =>
+                r.start_time ? new Date(r.start_time).toLocaleString() : '—',
             },
             {
               key: 'end',
               header: 'Ended',
               render: (r) =>
-                r.endTime ? new Date(r.endTime).toLocaleString() : '—',
+                r.end_time ? new Date(r.end_time).toLocaleString() : '—',
             },
             {
               key: 'logs',
               header: 'Logs',
               render: (r) => (
-                <Link to={`/admin/jobs/${r.jobId}/logs`}>
+                <Link to={`/admin/scrapers/${retailerId}/jobs/${r.id}/logs`}>
                   <Button variant="secondary">View logs</Button>
                 </Link>
               ),

@@ -19,13 +19,13 @@ export function HomePage() {
             <Button className="mt-1">Browse products</Button>
           </Link>
         </Card>
-        <Card title="Users">
+        <Card title="Account">
           <p className="text-muted">
-            Register, verify your email, and reset your password when needed.
+            Log in or create an account to browse products and compare prices.
           </p>
-          <Link to="/register">
+          <Link to="/login">
             <Button variant="secondary" className="mt-1">
-              Create account
+              Log in
             </Button>
           </Link>
         </Card>

@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Table } from '@/components/ui/Table';
-const emptyForm = { name: '', websiteUrl: '' };
+
+const emptyForm = { name: '', url: '' };
 
 export function AdminRetailersPage() {
   const [retailers, setRetailers] = useState([]);
@@ -36,11 +37,7 @@ export function AdminRetailersPage() {
     setSaving(true);
     setError('');
     try {
-      if (editingId) {
-        await retailersApi.update(editingId, form);
-      } else {
-        await retailersApi.create(form);
-      }
+      await retailersApi.save(editingId ? { id: editingId, ...form } : form);
       setEditingId(null);
       setForm(emptyForm);
       await load();
@@ -51,10 +48,10 @@ export function AdminRetailersPage() {
     }
   }
 
-  async function handleDelete(retailerId) {
+  async function handleDelete(id) {
     if (!confirm('Delete retailer? Associated scraper may be affected.')) return;
     try {
-      await retailersApi.delete(retailerId);
+      await retailersApi.delete(id);
       await load();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Delete failed');
@@ -70,7 +67,7 @@ export function AdminRetailersPage() {
       <Card title={editingId ? 'Edit retailer' : 'Add retailer'}>
         <form className="form-stack" onSubmit={handleSubmit}>
           <Input label="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-          <Input label="Website URL" type="url" value={form.websiteUrl} onChange={(e) => setForm({ ...form, websiteUrl: e.target.value })} required />
+          <Input label="Website URL" type="url" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} required />
           <div className="form-actions">
             <Button type="submit" loading={saving}>
               {editingId ? 'Update' : 'Create'}
@@ -89,7 +86,7 @@ export function AdminRetailersPage() {
         <LoadingSpinner />
       ) : (
         <Table
-          keyField="retailerId"
+          keyField="id"
           data={retailers}
           columns={[
             { key: 'name', header: 'Name', render: (r) => r.name },
@@ -97,8 +94,8 @@ export function AdminRetailersPage() {
               key: 'url',
               header: 'Website',
               render: (r) => (
-                <a href={r.websiteUrl} target="_blank" rel="noreferrer">
-                  {r.websiteUrl}
+                <a href={r.url} target="_blank" rel="noreferrer">
+                  {r.url}
                 </a>
               ),
             },
@@ -107,10 +104,10 @@ export function AdminRetailersPage() {
               header: 'Actions',
               render: (r) => (
                 <div className="form-actions">
-                  <Button variant="secondary" onClick={() => { setEditingId(r.retailerId); setForm({ name: r.name, websiteUrl: r.websiteUrl }); }}>
+                  <Button variant="secondary" onClick={() => { setEditingId(r.id); setForm({ name: r.name ?? '', url: r.url ?? '' }); }}>
                     Edit
                   </Button>
-                  <Button variant="danger" onClick={() => handleDelete(r.retailerId)}>
+                  <Button variant="danger" onClick={() => handleDelete(r.id)}>
                     Delete
                   </Button>
                 </div>

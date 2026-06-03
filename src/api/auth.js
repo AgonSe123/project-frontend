@@ -7,29 +7,10 @@ export const authApi = {
       body: JSON.stringify(data),
     }),
 
-  register: (data) =>
-    apiRequest('/auth/register', {
+  refresh: (refreshToken) =>
+    apiRequest('/auth/refresh', {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  logout: () => apiRequest('/auth/logout', { method: 'POST' }),
-
-  verifyEmail: (token) =>
-    apiRequest(`/auth/verify-email?token=${encodeURIComponent(token)}`, {
-      method: 'POST',
-    }),
-
-  forgotPassword: (email) =>
-    apiRequest('/auth/forgot-password', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    }),
-
-  resetPassword: (token, password) =>
-    apiRequest('/auth/reset-password', {
-      method: 'POST',
-      body: JSON.stringify({ token, password }),
+      body: JSON.stringify({ refresh_token: refreshToken }),
     }),
 
   me: () => apiRequest('/auth/me'),

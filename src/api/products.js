@@ -1,30 +1,31 @@
 import { apiRequest } from './client';
 
+function asArray(data) {
+  return data ?? [];
+}
+
 export const productsApi = {
-  list: (params) => {
-    const query = new URLSearchParams();
-    if (params?.search) query.set('search', params.search);
-    if (params?.category) query.set('category', params.category);
-    const qs = query.toString();
-    return apiRequest(`/products${qs ? `?${qs}` : ''}`);
-  },
+  list: async () => asArray(await apiRequest('/products')),
 
   getById: (productId) => apiRequest(`/products/${productId}`),
 
-  getPrices: (productId) => apiRequest(`/products/${productId}/prices`),
-
-  create: (product) =>
+  save: (product) =>
     apiRequest('/products', {
-      method: 'POST',
-      body: JSON.stringify(product),
-    }),
-
-  update: (productId, product) =>
-    apiRequest(`/products/${productId}`, {
       method: 'PUT',
       body: JSON.stringify(product),
     }),
 
   delete: (productId) =>
     apiRequest(`/products/${productId}`, { method: 'DELETE' }),
+
+  savePricing: (productId, pricing) =>
+    apiRequest(`/products/${productId}/pricing`, {
+      method: 'PUT',
+      body: JSON.stringify(pricing),
+    }),
+
+  deletePricing: (productId, pricingId) =>
+    apiRequest(`/products/${productId}/pricing/${pricingId}`, {
+      method: 'DELETE',
+    }),
 };

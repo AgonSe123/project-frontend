@@ -7,20 +7,28 @@ import {
   useState,
 } from 'react';
 import { authApi } from '@/api/auth';
-import { ApiClientError } from '@/api/client';
+import {
+  ApiClientError,
+  clearTokens,
+  getAccessToken,
+  setTokens,
+} from '@/api/client';
+import { emailFromAccessToken } from '@/api/jwt';
+import { usersApi } from '@/api/users';
+import bcrypt from 'bcryptjs';
 
 const AuthContext = createContext(null);
 
-const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
-function persistSession(token, user) {
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+function persistUser(user) {
+  if (user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
 }
 
 function clearSession() {
-  localStorage.removeItem(TOKEN_KEY);
+  clearTokens();
   localStorage.removeItem(USER_KEY);
 }
 
@@ -34,21 +42,42 @@ function loadStoredUser() {
   }
 }
 
+async function fetchCurrentUser() {
+  try {
+    const profile = await authApi.me();
+    if (profile) {
+      persistUser(profile);
+      return profile;
+    }
+  } catch (err) {
+    if (!(err instanceof ApiClientError && err.status === 404)) {
+      throw err;
+    }
+  }
+
+  const email = emailFromAccessToken(getAccessToken());
+  const stored = loadStoredUser();
+  if (stored?.email === email && stored?.id) {
+    return stored;
+  }
+  return email ? { email, role: 'USER' } : null;
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(loadStoredUser);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUser = useCallback(async () => {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const token = getAccessToken();
     if (!token) {
       setUser(null);
       setIsLoading(false);
       return;
     }
+
     try {
-      const me = await authApi.me();
-      setUser(me);
-      localStorage.setItem(USER_KEY, JSON.stringify(me));
+      const profile = await fetchCurrentUser();
+      setUser(profile);
     } catch (err) {
       if (err instanceof ApiClientError && err.status === 401) {
         clearSession();
@@ -65,35 +94,48 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (data) => {
     const res = await authApi.login(data);
-    persistSession(res.token, res.user);
-    setUser(res.user);
+    setTokens(res.access_token, res.refresh_token);
+    const profile = await fetchCurrentUser();
+    setUser(profile);
+    return profile;
   }, []);
 
-  const register = useCallback(async (data) => {
-    const res = await authApi.register(data);
-    persistSession(res.token, res.user);
-    setUser(res.user);
-  }, []);
+  const register = useCallback(async ({ email, password }) => {
+    const password_hash = bcrypt.hashSync(password, 10);
+    await usersApi.save({
+      email,
+      password_hash,
+      is_verified: false,
+      role: 'USER',
+    });
 
-  const logout = useCallback(async () => {
-    try {
-      await authApi.logout();
-    } finally {
-      clearSession();
-      setUser(null);
-    }
+    return login({ email, password });
+  }, [login]);
+
+  const logout = useCallback(() => {
+    clearSession();
+    setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({
-      user,
-      isLoading,
-      isAdmin: user?.role === 'ADMIN',
-      login,
-      register,
-      logout,
-      refreshUser,
-    }),
+    () => {
+      const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      return {
+        user,
+        isLoading,
+        isAdmin:
+          user?.role === 'ADMIN' ||
+          (user?.email && adminEmails.includes(user.email)),
+        login,
+        register,
+        logout,
+        refreshUser,
+      };
+    },
     [user, isLoading, login, register, logout, refreshUser],
   );
 

@@ -7,9 +7,6 @@ import { ProductsPage } from '@/pages/ProductsPage';
 import { ProductDetailPage } from '@/pages/ProductDetailPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
-import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
-import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
-import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { DashboardPage } from '@/pages/admin/DashboardPage';
 import { AdminProductsPage } from '@/pages/admin/AdminProductsPage';
 import { AdminRetailersPage } from '@/pages/admin/AdminRetailersPage';
@@ -22,13 +19,13 @@ export function AppRoutes() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="products" element={<ProductsPage />} />
-        <Route path="products/:productId" element={<ProductDetailPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
-        <Route path="verify-email" element={<VerifyEmailPage />} />
-        <Route path="forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="reset-password" element={<ResetPasswordPage />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="products/:productId" element={<ProductDetailPage />} />
+        </Route>
 
         <Route element={<ProtectedRoute adminOnly />}>
           <Route path="admin" element={<AdminLayout />}>
@@ -36,8 +33,11 @@ export function AppRoutes() {
             <Route path="products" element={<AdminProductsPage />} />
             <Route path="retailers" element={<AdminRetailersPage />} />
             <Route path="scrapers" element={<AdminScrapersPage />} />
-            <Route path="scrapers/:scraperId/jobs" element={<ScraperJobsPage />} />
-            <Route path="jobs/:jobId/logs" element={<ScraperLogsPage />} />
+            <Route path="scrapers/:retailerId/jobs" element={<ScraperJobsPage />} />
+            <Route
+              path="scrapers/:retailerId/jobs/:jobId/logs"
+              element={<ScraperLogsPage />}
+            />
           </Route>
         </Route>
       </Route>

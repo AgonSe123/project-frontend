@@ -30,7 +30,7 @@ export function RegisterPage() {
     setLoading(true);
     try {
       await register({ email, password });
-      navigate('/verify-email', { state: { email } });
+      navigate('/');
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Registration failed');
     } finally {
