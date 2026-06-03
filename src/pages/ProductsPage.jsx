@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { productsApi } from '@/api/products';
 import { ApiClientError } from '@/api/client';
 import { Badge } from '@/components/ui/Badge';
@@ -7,14 +7,19 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import './products.css';
 
 export function ProductsPage() {
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const q = searchParams.get('search');
+    if (q) setSearch(q);
+  }, [searchParams]);
 
   useEffect(() => {
     setLoading(true);
@@ -49,20 +54,31 @@ export function ProductsPage() {
 
   return (
     <div>
-      <h1 className="page-title">Products</h1>
+      <section className="page-hero page-hero-compact">
+        <h1 className="text-3xl font-bold text-white md:text-4xl">Products</h1>
+        <p className="mt-2 font-semibold text-brand-dark">
+          Compare prices across retailers
+        </p>
+      </section>
+
       <p className="page-subtitle">
         Each product can have multiple retailer pricings — open a product to compare.
       </p>
 
-      <form className="search-bar" onSubmit={handleSearch}>
+      <form
+        className="mb-6 grid max-w-3xl grid-cols-1 items-end gap-4 rounded-full bg-white p-3 shadow-md md:grid-cols-[1fr_1fr_auto]"
+        onSubmit={handleSearch}
+      >
         <Input
           label="Search"
+          hideLabel
           placeholder="Name, brand…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <Input
           label="Category"
+          hideLabel
           placeholder="e.g. Electronics"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
@@ -76,15 +92,15 @@ export function ProductsPage() {
       ) : filtered.length === 0 ? (
         <p className="text-muted">No products found.</p>
       ) : (
-        <div className="product-grid">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
-            <Card key={p.id}>
-              <div className="product-card-head">
-                <h3>{p.name}</h3>
+            <Card key={p.id} hover>
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <h3 className="text-lg font-bold text-brand-dark">{p.name}</h3>
                 <Badge tone="info">{p.category}</Badge>
               </div>
               <p className="text-muted">{p.brand}</p>
-              <p className="product-desc">{p.description}</p>
+              <p className="mb-4 line-clamp-2 text-sm text-muted">{p.description}</p>
               <Link to={`/products/${p.id}`}>
                 <Button variant="secondary">View prices</Button>
               </Link>

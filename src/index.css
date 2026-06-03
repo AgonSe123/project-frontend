@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-dark: #13547a;
+  --color-brand: #80d0c7;
+  --color-brand-light: #f0f8ff;
+  --color-muted: #717275;
+  --font-sans: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --spacing-25: 6.25rem;
+  --spacing-26: 6.5rem;
+  --spacing-37: 9.25rem;
+  --spacing-50: 12.5rem;
+}
+
+@layer base {
+  * {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    @apply bg-white text-brand-dark antialiased;
+  }
+
+  a {
+    @apply text-brand transition-colors duration-200 hover:text-brand-dark;
+  }
+}
+
+@layer components {
+  .header-gradient {
+    background-image: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
+  }
+
+  .page-hero {
+    background-image: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
+    @apply relative left-1/2 mb-8 -mt-6 w-screen -translate-x-1/2 text-center;
+  }
+
+  .page-hero-compact {
+    @apply py-12 sm:py-16;
+  }
+
+  .page-title {
+    @apply mb-3 text-2xl font-bold text-brand-dark;
+  }
+
+  .page-subtitle {
+    @apply -mt-1 mb-6 font-medium text-muted;
+  }
+
+  .error-banner {
+    @apply mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-red-600;
+  }
+
+  .success-banner {
+    @apply mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-green-700;
+  }
+
+  .form-stack {
+    @apply flex max-w-md flex-col gap-4;
+  }
+
+  .form-actions {
+    @apply mt-2 flex flex-wrap items-center gap-3;
+  }
+
+  .grid-2 {
+    @apply grid grid-cols-1 gap-4 md:grid-cols-2;
+  }
+
+  .grid-3 {
+    @apply grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .metric-value {
+    @apply text-3xl font-bold text-brand-dark;
+  }
+
+  .metric-label {
+    @apply text-sm font-medium text-muted;
+  }
+
+  .metric-card {
+    @apply flex flex-col gap-1;
+  }
+}

@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
-import './auth.css';
 
 export function RegisterPage() {
   const { register, user } = useAuth();
@@ -39,10 +38,10 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="auth-page">
+    <div className="mx-auto max-w-md py-8">
       <Card title="Create account">
         {error && <div className="error-banner">{error}</div>}
-        <form className="form-stack" onSubmit={handleSubmit}>
+        <form className="form-stack max-w-none" onSubmit={handleSubmit}>
           <Input
             label="Email"
             type="email"
@@ -68,11 +67,11 @@ export function RegisterPage() {
             required
             autoComplete="new-password"
           />
-          <Button type="submit" loading={loading}>
+          <Button type="submit" loading={loading} className="w-full">
             Sign up
           </Button>
         </form>
-        <p className="mt-2 text-muted">
+        <p className="mt-4 text-sm text-muted">
           Already have an account? <Link to="/login">Log in</Link>
         </p>
       </Card>

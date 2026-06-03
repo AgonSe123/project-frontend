@@ -9,20 +9,30 @@ export function Table({
   }
 
   return (
-    <div className="table-wrap">
-      <table className="data-table">
+    <div className="overflow-x-auto rounded-2xl border border-[#dce8ef] bg-white shadow-sm">
+      <table className="w-full border-collapse text-sm">
         <thead>
           <tr>
             {columns.map((col) => (
-              <th key={col.key}>{col.header}</th>
+              <th
+                key={col.key}
+                className="border-b border-[#ecf3f2] bg-brand-light px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-brand-dark"
+              >
+                {col.header}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {data.map((row) => (
-            <tr key={String(row[keyField])}>
+            <tr key={String(row[keyField])} className="hover:bg-brand-light/60">
               {columns.map((col) => (
-                <td key={col.key}>{col.render(row)}</td>
+                <td
+                  key={col.key}
+                  className="border-b border-[#ecf3f2] px-4 py-3 text-brand-dark"
+                >
+                  {col.render(row)}
+                </td>
               ))}
             </tr>
           ))}

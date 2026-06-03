@@ -6,7 +6,6 @@ import { ApiClientError } from '@/api/client';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Table } from '@/components/ui/Table';
-import './products.css';
 
 function formatPrice(cents) {
   return new Intl.NumberFormat(undefined, {
@@ -52,74 +51,66 @@ export function ProductDetailPage() {
 
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="error-banner">{error}</div>;
-  if (!product) return <p>Product not found.</p>;
+  if (!product) return <p className="text-muted">Product not found.</p>;
 
   return (
     <div>
-      <Link to="/products" className="text-muted">
+      <Link to="/products" className="text-sm text-muted hover:text-brand-dark">
         ← Back to products
       </Link>
-      <h1 className="page-title mt-1">{product.name}</h1>
-      <div className="product-meta">
-        <span>
-          <strong>Brand:</strong> {product.brand}
-        </span>
-        <span>
-          <strong>Category:</strong> {product.category}
-        </span>
-        <span>
-          <strong>Specs:</strong> {product.specifications || '—'}
-        </span>
+      <h1 className="page-title mt-4">{product.name}</h1>
+      <div className="mb-6 grid gap-2 text-sm text-muted">
+        <span><strong className="text-brand-dark">Brand:</strong> {product.brand}</span>
+        <span><strong className="text-brand-dark">Category:</strong> {product.category}</span>
+        <span><strong className="text-brand-dark">Specs:</strong> {product.specifications || '—'}</span>
       </div>
-      <p>{product.description}</p>
+      <p className="mb-6 text-brand-dark">{product.description}</p>
 
-      <h2>Retailer pricing</h2>
+      <h2 className="text-xl font-bold text-brand-dark">Retailer pricing</h2>
       <p className="page-subtitle">Prices from each retailer.</p>
 
-      <div className="price-table">
-        <Table
-          keyField="id"
-          data={prices}
-          emptyMessage="No retailer prices yet."
-          columns={[
-            {
-              key: 'retailer',
-              header: 'Retailer',
-              render: (row) =>
-                row.retailer?.name ??
-                (row.retailer_id
-                  ? retailerNames.get(row.retailer_id) ?? row.retailer_id
-                  : 'Unknown retailer'),
-            },
-            {
-              key: 'price',
-              header: 'Price',
-              render: (row) => (
-                <span className={row.id === lowestPriceId ? 'lowest' : ''}>
-                  {formatPrice(row.price)}
-                </span>
-              ),
-            },
-            {
-              key: 'availability',
-              header: 'Availability',
-              render: (row) => (
-                <Badge tone={row.availability ? 'success' : 'danger'}>
-                  {row.availability ? 'In stock' : 'Unavailable'}
-                </Badge>
-              ),
-            },
-            {
-              key: 'updated',
-              header: 'Last updated',
-              render: (row) =>
-                row.last_updated
-                  ? new Date(row.last_updated).toLocaleString()
-                  : '—',
-            },
-          ]}
-        />
-      </div>
+      <Table
+        keyField="id"
+        data={prices}
+        emptyMessage="No retailer prices yet."
+        columns={[
+          {
+            key: 'retailer',
+            header: 'Retailer',
+            render: (row) =>
+              row.retailer?.name ??
+              (row.retailer_id
+                ? retailerNames.get(row.retailer_id) ?? row.retailer_id
+                : 'Unknown retailer'),
+          },
+          {
+            key: 'price',
+            header: 'Price',
+            render: (row) => (
+              <span className={row.id === lowestPriceId ? 'font-bold text-green-600' : ''}>
+                {formatPrice(row.price)}
+              </span>
+            ),
+          },
+          {
+            key: 'availability',
+            header: 'Availability',
+            render: (row) => (
+              <Badge tone={row.availability ? 'success' : 'danger'}>
+                {row.availability ? 'In stock' : 'Unavailable'}
+              </Badge>
+            ),
+          },
+          {
+            key: 'updated',
+            header: 'Last updated',
+            render: (row) =>
+              row.last_updated
+                ? new Date(row.last_updated).toLocaleString()
+                : '—',
+          },
+        ]}
+      />
     </div>
   );
 }
