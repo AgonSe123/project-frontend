@@ -65,9 +65,14 @@ async function parseJsonBody(response) {
 export async function apiRequest(path, options = {}, retried = false) {
   const token = getAccessToken();
   const headers = {
-    'Content-Type': 'application/json',
     ...(options.headers ?? {}),
   };
+
+  const hasBody = options.body != null && options.body !== '';
+
+  if (hasBody && !headers['Content-Type'] && !headers['content-type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token && !isPublicAuthPath(path)) {
     headers.Authorization = `Bearer ${token}`;
@@ -95,9 +100,13 @@ export async function apiRequest(path, options = {}, retried = false) {
     let message = response.statusText;
     try {
       const body = await parseJsonBody(response);
-      message = body?.message ?? message;
+      if (body && typeof body === 'object' && body.message) {
+        message = body.message;
+      }
     } catch {
-      /* use status text */
+      if (response.status === 400) {
+        message = 'Bad request. The server could not process this request.';
+      }
     }
     if (response.status === 401 && path.startsWith('/auth/login')) {
       message = 'Invalid email or password.';

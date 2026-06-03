@@ -7,6 +7,8 @@ function asArray(data) {
 export const productsApi = {
   list: async () => asArray(await apiRequest('/products')),
 
+  getCategories: async () => asArray(await apiRequest('/products/categories')),
+
   getById: (productId) => apiRequest(`/products/${productId}`),
 
   save: (product) =>

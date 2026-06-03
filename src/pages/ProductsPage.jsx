@@ -12,13 +12,15 @@ export function ProductsPage() {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(() => searchParams.get('category') ?? '');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const q = searchParams.get('search');
+    const c = searchParams.get('category');
     if (q) setSearch(q);
+    if (c) setCategory(c);
   }, [searchParams]);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function ProductsPage() {
           .filter(Boolean)
           .some((v) => v.toLowerCase().includes(q));
       const matchesCategory =
-        !cat || (p.category ?? '').toLowerCase().includes(cat);
+        !cat || (p.category ?? '').toLowerCase() === cat;
       return matchesSearch && matchesCategory;
     });
   }, [products, search, category]);
