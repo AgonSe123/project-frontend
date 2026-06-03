@@ -3,21 +3,9 @@ import { Link } from 'react-router-dom';
 import { retailersApi } from '@/api/retailers';
 import { scrapersApi } from '@/api/scrapers';
 import { ApiClientError } from '@/api/client';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Table } from '@/components/ui/Table';
-
-function statusTone(status) {
-  switch (status) {
-    case 'RUNNING':
-      return 'warning';
-    case 'IDLE':
-      return 'success';
-    default:
-      return 'default';
-  }
-}
 
 export function AdminScrapersPage() {
   const [retailers, setRetailers] = useState([]);
@@ -90,15 +78,6 @@ export function AdminScrapersPage() {
               key: 'name',
               header: 'Retailer',
               render: (r) => r.name,
-            },
-            {
-              key: 'status',
-              header: 'Scraper status',
-              render: (r) => {
-                const scraper = scraperByRetailer.get(r.id);
-                if (!scraper) return <span className="text-muted">Not configured</span>;
-                return <Badge tone={statusTone(scraper.status)}>{scraper.status}</Badge>;
-              },
             },
             {
               key: 'last_run',
