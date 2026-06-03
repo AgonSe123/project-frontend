@@ -4,6 +4,7 @@ import { productsApi } from '@/api/products';
 import { retailersApi } from '@/api/retailers';
 import { ApiClientError } from '@/api/client';
 import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Table } from '@/components/ui/Table';
 
@@ -18,6 +19,26 @@ function normalizeUrl(url) {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
   return `https://${url}`;
+}
+
+function PageHero({ title, subtitle, meta }) {
+  return (
+    <section className="page-hero page-hero-compact">
+      <Link
+        to="/products"
+        className="mb-4 inline-block text-sm font-semibold text-white/90 no-underline hover:text-white"
+      >
+        ← Back to products
+      </Link>
+      <h1 className="text-3xl font-bold text-white md:text-4xl">{title}</h1>
+      {subtitle && (
+        <p className="mt-2 font-semibold text-brand-dark">{subtitle}</p>
+      )}
+      {meta && (
+        <p className="mt-2 text-lg font-bold text-white">{meta}</p>
+      )}
+    </section>
+  );
 }
 
 export function ProductDetailPage() {
@@ -80,22 +101,71 @@ export function ProductDetailPage() {
     return available.reduce((min, p) => (p.price < min.price ? p : min)).id;
   }, [prices]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="error-banner">{error}</div>;
-  if (!product) return <p className="text-muted">Product not found.</p>;
+  const lowestPrice = useMemo(() => {
+    if (!lowestPriceId) return null;
+    return prices.find((p) => p.id === lowestPriceId)?.price ?? null;
+  }, [prices, lowestPriceId]);
+
+  if (loading) {
+    return (
+      <div>
+        <PageHero title="Product" subtitle="Loading product details…" />
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <PageHero title="Product" subtitle="Something went wrong" />
+        <div className="error-banner">{error}</div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div>
+        <PageHero title="Product not found" subtitle="This product may have been removed." />
+        <p className="text-muted">Try browsing the catalog instead.</p>
+      </div>
+    );
+  }
+
+  const heroSubtitle = [product.brand, product.category].filter(Boolean).join(' · ');
 
   return (
     <div>
-      <Link to="/products" className="text-sm text-muted hover:text-brand-dark">
-        ← Back to products
-      </Link>
-      <h1 className="page-title mt-4">{product.name}</h1>
-      <div className="mb-6 grid gap-2 text-sm text-muted">
-        <span><strong className="text-brand-dark">Brand:</strong> {product.brand}</span>
-        <span><strong className="text-brand-dark">Category:</strong> {product.category}</span>
-        <span><strong className="text-brand-dark">Specs:</strong> {product.specifications || '—'}</span>
-      </div>
-      <p className="mb-6 text-brand-dark">{product.description}</p>
+      <PageHero
+        title={product.name}
+        subtitle={heroSubtitle || undefined}
+        meta={lowestPrice != null ? `From ${formatPrice(lowestPrice)}` : undefined}
+      />
+
+      <Card title="Product details" className="mb-8">
+        <div className="mb-4 flex flex-wrap gap-2">
+          {product.category && <Badge tone="info">{product.category}</Badge>}
+          {product.brand && <Badge>{product.brand}</Badge>}
+        </div>
+        <dl className="grid gap-4 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="font-semibold text-brand-dark">Brand</dt>
+            <dd className="mt-1 text-muted">{product.brand || '—'}</dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-brand-dark">Category</dt>
+            <dd className="mt-1 text-muted">{product.category || '—'}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="font-semibold text-brand-dark">Specifications</dt>
+            <dd className="mt-1 text-muted">{product.specifications || '—'}</dd>
+          </div>
+        </dl>
+        {product.description && (
+          <p className="mt-4 leading-relaxed text-brand-dark">{product.description}</p>
+        )}
+      </Card>
 
       <h2 className="text-xl font-bold text-brand-dark">Retailer pricing</h2>
       <p className="page-subtitle">Click a row to visit the retailer&apos;s site.</p>
