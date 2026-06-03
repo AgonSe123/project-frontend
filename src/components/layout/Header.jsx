@@ -24,12 +24,6 @@ export function Header() {
         </Link>
 
         <nav className="flex flex-1 gap-6">
-          <Link to="/#information" className="text-sm font-semibold uppercase tracking-wide text-white transition-colors duration-200 hover:text-brand-dark">
-            How it works
-          </Link>
-          <Link to="/#faqs" className="text-sm font-semibold uppercase tracking-wide text-white transition-colors duration-200 hover:text-brand-dark">
-            FAQs
-          </Link>
           {user && <NavLink to="/products" className={navLinkClass}>Products</NavLink>}
           {user && isAdmin && <NavLink to="/admin" className={navLinkClass}>Admin</NavLink>}
         </nav>
