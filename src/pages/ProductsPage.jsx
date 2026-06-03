@@ -79,7 +79,9 @@ export function ProductsPage() {
   return (
     <div>
       <section className="page-hero page-hero-compact">
-        <h1 className="text-3xl font-bold text-white md:text-4xl">Products</h1>
+        <h1 className="text-3xl font-bold text-white md:text-4xl">
+          {category || 'All categories'}
+        </h1>
         <p className="mt-2 font-semibold text-brand-dark">
           Compare prices across retailers
         </p>
