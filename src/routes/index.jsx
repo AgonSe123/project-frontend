@@ -13,6 +13,7 @@ import { AdminRetailersPage } from '@/pages/admin/AdminRetailersPage';
 import { AdminScrapersPage } from '@/pages/admin/AdminScrapersPage';
 import { ScraperJobsPage } from '@/pages/admin/ScraperJobsPage';
 import { ScraperLogsPage } from '@/pages/admin/ScraperLogsPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export function AppRoutes() {
   return (
@@ -40,6 +41,8 @@ export function AppRoutes() {
             />
           </Route>
         </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );

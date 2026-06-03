@@ -33,7 +33,7 @@
 
   .page-hero {
     background-image: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
-    @apply relative left-1/2 mb-8 -mt-6 w-screen -translate-x-1/2 text-center;
+    @apply relative left-1/2 mb-8 w-screen -translate-x-1/2 text-center;
   }
 
   .page-hero-compact {

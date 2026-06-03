@@ -40,7 +40,7 @@ export function HomeHero() {
   return (
     <header
       id="home"
-      className="header-gradient relative left-1/2 -mt-6 mb-8 w-screen -translate-x-1/2 py-24 text-center sm:py-32 md:py-36 lg:py-37"
+      className="header-gradient relative left-1/2 mb-8 w-screen -translate-x-1/2 py-24 text-center sm:py-32 md:py-36 lg:py-37"
     >
       <div className="container mx-auto flex flex-col items-center px-6">
         <h1 className="mb-2 w-full text-4xl font-bold text-white sm:text-5xl md:text-6xl">
