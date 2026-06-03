@@ -7,6 +7,12 @@ export const authApi = {
       body: JSON.stringify(data),
     }),
 
+  signup: (data) =>
+    apiRequest('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   refresh: (refreshToken) =>
     apiRequest('/auth/refresh', {
       method: 'POST',

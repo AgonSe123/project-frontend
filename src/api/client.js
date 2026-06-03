@@ -3,6 +3,12 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api';
 export const ACCESS_TOKEN_KEY = 'auth_token';
 export const REFRESH_TOKEN_KEY = 'refresh_token';
 
+const PUBLIC_AUTH_PATHS = ['/auth/login', '/auth/signup', '/auth/refresh'];
+
+function isPublicAuthPath(path) {
+  return PUBLIC_AUTH_PATHS.some((prefix) => path.startsWith(prefix));
+}
+
 export class ApiClientError extends Error {
   constructor(message, status) {
     super(message);
@@ -63,7 +69,7 @@ export async function apiRequest(path, options = {}, retried = false) {
     ...(options.headers ?? {}),
   };
 
-  if (token) {
+  if (token && !isPublicAuthPath(path)) {
     headers.Authorization = `Bearer ${token}`;
   }
 
@@ -75,8 +81,7 @@ export async function apiRequest(path, options = {}, retried = false) {
   if (
     response.status === 401 &&
     !retried &&
-    !path.startsWith('/auth/login') &&
-    !path.startsWith('/auth/refresh')
+    !isPublicAuthPath(path)
   ) {
     try {
       await refreshAccessToken();
@@ -93,6 +98,9 @@ export async function apiRequest(path, options = {}, retried = false) {
       message = body?.message ?? message;
     } catch {
       /* use status text */
+    }
+    if (response.status === 401 && path.startsWith('/auth/login')) {
+      message = 'Invalid email or password.';
     }
     throw new ApiClientError(message, response.status);
   }

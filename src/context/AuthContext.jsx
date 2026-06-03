@@ -14,8 +14,6 @@ import {
   setTokens,
 } from '@/api/client';
 import { emailFromAccessToken } from '@/api/jwt';
-import { usersApi } from '@/api/users';
-import bcrypt from 'bcryptjs';
 
 const AuthContext = createContext(null);
 
@@ -42,7 +40,16 @@ function loadStoredUser() {
   }
 }
 
-async function fetchCurrentUser() {
+function fallbackUser(accessToken, storedUser) {
+  const email = emailFromAccessToken(accessToken);
+  if (!email) return null;
+  if (storedUser?.email === email && storedUser?.id) {
+    return storedUser;
+  }
+  return { email, role: 'USER' };
+}
+
+async function fetchCurrentUser(accessToken, { allowFallback = false } = {}) {
   try {
     const profile = await authApi.me();
     if (profile) {
@@ -50,17 +57,17 @@ async function fetchCurrentUser() {
       return profile;
     }
   } catch (err) {
-    if (!(err instanceof ApiClientError && err.status === 404)) {
-      throw err;
+    if (
+      allowFallback &&
+      err instanceof ApiClientError &&
+      (err.status === 401 || err.status === 404)
+    ) {
+      return fallbackUser(accessToken, loadStoredUser());
     }
+    throw err;
   }
 
-  const email = emailFromAccessToken(getAccessToken());
-  const stored = loadStoredUser();
-  if (stored?.email === email && stored?.id) {
-    return stored;
-  }
-  return email ? { email, role: 'USER' } : null;
+  return allowFallback ? fallbackUser(accessToken, loadStoredUser()) : null;
 }
 
 export function AuthProvider({ children }) {
@@ -76,7 +83,7 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const profile = await fetchCurrentUser();
+      const profile = await fetchCurrentUser(token);
       setUser(profile);
     } catch (err) {
       if (err instanceof ApiClientError && err.status === 401) {
@@ -93,24 +100,32 @@ export function AuthProvider({ children }) {
   }, [refreshUser]);
 
   const login = useCallback(async (data) => {
+    clearSession();
     const res = await authApi.login(data);
+    if (!res?.access_token) {
+      throw new ApiClientError('Login failed: no access token returned.', 401);
+    }
     setTokens(res.access_token, res.refresh_token);
-    const profile = await fetchCurrentUser();
+    const profile = await fetchCurrentUser(res.access_token, { allowFallback: true });
     setUser(profile);
     return profile;
   }, []);
 
   const register = useCallback(async ({ email, password }) => {
-    const password_hash = bcrypt.hashSync(password, 10);
-    await usersApi.save({
-      email,
-      password_hash,
-      is_verified: false,
-      role: 'USER',
-    });
-
-    return login({ email, password });
-  }, [login]);
+    clearSession();
+    const created = await authApi.signup({ email, password });
+    persistUser(created);
+    const res = await authApi.login({ email, password });
+    if (!res?.access_token) {
+      throw new ApiClientError('Login failed after signup.', 401);
+    }
+    setTokens(res.access_token, res.refresh_token);
+    const profile =
+      (await fetchCurrentUser(res.access_token, { allowFallback: true })) ?? created;
+    setUser(profile);
+    persistUser(profile);
+    return profile;
+  }, []);
 
   const logout = useCallback(() => {
     clearSession();
