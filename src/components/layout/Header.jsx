@@ -34,11 +34,6 @@ export function Header() {
               <span className="hidden max-w-[180px] truncate text-sm text-white/90 sm:inline">
                 {user.email}
               </span>
-              {user.is_verified === false && (
-                <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-brand-dark">
-                  Email not verified
-                </span>
-              )}
               <Button variant="ghost" header onClick={() => logout()}>
                 Log out
               </Button>
