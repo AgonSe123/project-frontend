@@ -5,35 +5,61 @@ import { ApiClientError } from '@/api/client';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { cn } from '@/lib/cn';
+
+function SearchIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      className="size-6 shrink-0 text-brand-dark"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      />
+    </svg>
+  );
+}
 
 export function ProductsPage() {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
   const [category, setCategory] = useState(() => searchParams.get('category') ?? '');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const q = searchParams.get('search');
-    const c = searchParams.get('category');
-    if (q) setSearch(q);
-    if (c) setCategory(c);
+    setSearch(searchParams.get('search') ?? '');
+    setCategory(searchParams.get('category') ?? '');
   }, [searchParams]);
 
   useEffect(() => {
     setLoading(true);
     setError('');
-    productsApi
-      .list()
-      .then(setProducts)
+    Promise.all([productsApi.list(), productsApi.getCategories()])
+      .then(([productList, categoryList]) => {
+        setProducts(productList);
+        setCategories(categoryList);
+      })
       .catch((err) =>
         setError(err instanceof ApiClientError ? err.message : 'Failed to load products'),
       )
       .finally(() => setLoading(false));
   }, []);
+
+  const categoryOptions = useMemo(() => {
+    if (categories.length > 0) return categories;
+    return [...new Set(products.map((p) => p.category).filter(Boolean))].sort();
+  }, [categories, products]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -50,10 +76,6 @@ export function ProductsPage() {
     });
   }, [products, search, category]);
 
-  function handleSearch(e) {
-    e.preventDefault();
-  }
-
   return (
     <div>
       <section className="page-hero page-hero-compact">
@@ -63,30 +85,45 @@ export function ProductsPage() {
         </p>
       </section>
 
-      <p className="page-subtitle">
-        Each product can have multiple retailer pricings — open a product to compare.
-      </p>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-4">
+        <label
+          className={cn(
+            'flex min-h-14 flex-1 items-center gap-3 rounded-full border border-[#ced4da] bg-white px-5 py-2',
+            'shadow-md ring-1 ring-[#dce8ef]',
+            'focus-within:border-brand focus-within:ring-2 focus-within:ring-[#e7f1ff]',
+          )}
+        >
+          <span className="sr-only">Search products</span>
+          <SearchIcon />
+          <input
+            type="search"
+            placeholder="Search by name, brand, or description…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-transparent text-base text-brand-dark outline-none placeholder:text-[#717275] sm:text-lg"
+          />
+        </label>
 
-      <form
-        className="mb-6 grid max-w-3xl grid-cols-1 items-end gap-4 rounded-full bg-white p-3 shadow-md md:grid-cols-[1fr_1fr_auto]"
-        onSubmit={handleSearch}
-      >
-        <Input
-          label="Search"
-          hideLabel
-          placeholder="Name, brand…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Input
-          label="Category"
-          hideLabel
-          placeholder="e.g. Electronics"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        />
-        <Button type="submit">Filter</Button>
-      </form>
+        <label className="flex shrink-0 flex-col gap-1 sm:min-w-[220px]">
+          <span className="sr-only">Category</span>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={cn(
+              'min-h-14 cursor-pointer rounded-full border border-[#ced4da] bg-white px-5 py-2.5',
+              'text-base text-brand-dark shadow-md ring-1 ring-[#dce8ef] outline-none transition-colors sm:text-lg',
+              'focus:border-brand focus:ring-2 focus:ring-[#e7f1ff]',
+            )}
+          >
+            <option value="">All categories</option>
+            {categoryOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       {error && <div className="error-banner">{error}</div>}
       {loading ? (
