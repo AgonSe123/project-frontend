@@ -14,6 +14,12 @@ function formatPrice(cents) {
   }).format(cents / 100);
 }
 
+function normalizeUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  return `https://${url}`;
+}
+
 export function ProductDetailPage() {
   const { productId } = useParams();
   const [product, setProduct] = useState(null);
@@ -35,10 +41,35 @@ export function ProductDetailPage() {
       .finally(() => setLoading(false));
   }, [productId]);
 
-  const retailerNames = useMemo(() => {
-    const map = new Map(retailers.map((r) => [r.id, r.name]));
-    return map;
-  }, [retailers]);
+  const retailersById = useMemo(() => new Map(retailers.map((r) => [r.id, r])), [retailers]);
+
+  function resolveRetailerName(row) {
+    if (row.retailer?.name) return row.retailer.name;
+
+    const retailerId = row.retailer_id ?? row.retailerId;
+    if (retailerId) {
+      return retailersById.get(retailerId)?.name ?? retailerId;
+    }
+
+    return 'Unknown retailer';
+  }
+
+  function resolveRetailerUrl(row) {
+    if (row.retailer?.url) return row.retailer.url;
+
+    const retailerId = row.retailer_id ?? row.retailerId;
+    if (retailerId) {
+      return retailersById.get(retailerId)?.url ?? null;
+    }
+
+    return null;
+  }
+
+  function handlePricingClick(row) {
+    const url = normalizeUrl(resolveRetailerUrl(row));
+    if (!url) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
 
   const prices = product?.product_prices ?? [];
 
@@ -67,21 +98,24 @@ export function ProductDetailPage() {
       <p className="mb-6 text-brand-dark">{product.description}</p>
 
       <h2 className="text-xl font-bold text-brand-dark">Retailer pricing</h2>
-      <p className="page-subtitle">Prices from each retailer.</p>
+      <p className="page-subtitle">Click a row to visit the retailer&apos;s site.</p>
 
       <Table
         keyField="id"
         data={prices}
         emptyMessage="No retailer prices yet."
+        onRowClick={handlePricingClick}
+        isRowClickable={(row) => Boolean(normalizeUrl(resolveRetailerUrl(row)))}
         columns={[
           {
             key: 'retailer',
             header: 'Retailer',
-            render: (row) =>
-              row.retailer?.name ??
-              (row.retailer_id
-                ? retailerNames.get(row.retailer_id) ?? row.retailer_id
-                : 'Unknown retailer'),
+            render: (row) => {
+              const name = resolveRetailerName(row);
+              const url = resolveRetailerUrl(row);
+              if (!url) return name;
+              return <span className="text-brand hover:text-brand-dark">{name}</span>;
+            },
           },
           {
             key: 'price',

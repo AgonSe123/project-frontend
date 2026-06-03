@@ -1,8 +1,12 @@
+import { cn } from '@/lib/cn';
+
 export function Table({
   columns,
   data,
   keyField,
   emptyMessage = 'No data found.',
+  onRowClick,
+  isRowClickable,
 }) {
   if (data.length === 0) {
     return <p className="text-muted">{emptyMessage}</p>;
@@ -24,18 +28,29 @@ export function Table({
           </tr>
         </thead>
         <tbody>
-          {data.map((row) => (
-            <tr key={String(row[keyField])} className="hover:bg-brand-light/60">
-              {columns.map((col) => (
-                <td
-                  key={col.key}
-                  className="border-b border-[#ecf3f2] px-4 py-3 text-brand-dark"
-                >
-                  {col.render(row)}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {data.map((row) => {
+            const clickable = isRowClickable ? isRowClickable(row) : Boolean(onRowClick);
+
+            return (
+              <tr
+                key={String(row[keyField])}
+                onClick={clickable ? () => onRowClick?.(row) : undefined}
+                className={cn(
+                  'hover:bg-brand-light/60',
+                  clickable && 'cursor-pointer',
+                )}
+              >
+                {columns.map((col) => (
+                  <td
+                    key={col.key}
+                    className="border-b border-[#ecf3f2] px-4 py-3 text-brand-dark"
+                  >
+                    {col.render(row)}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
