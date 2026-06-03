@@ -37,6 +37,11 @@ export const scrapersApi = {
   startJob: (retailerId) =>
     apiRequest(`${scraperPath(retailerId)}/jobs/start`, { method: 'POST' }),
 
+  stopJob: (retailerId, jobId) =>
+    apiRequest(`${scraperPath(retailerId)}/jobs/${jobId}/end?status=INTERRUPTED`, {
+      method: 'PUT',
+    }),
+
   getJobs: async (retailerId) =>
     asArray(await apiRequest(`${scraperPath(retailerId)}/jobs`)),
 

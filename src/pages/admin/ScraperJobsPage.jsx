@@ -26,17 +26,36 @@ export function ScraperJobsPage() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(null);
+
+  async function loadJobs() {
+    if (!retailerId) return;
+    const data = await scrapersApi.getJobs(retailerId);
+    setJobs(data);
+  }
 
   useEffect(() => {
     if (!retailerId) return;
-    scrapersApi
-      .getJobs(retailerId)
-      .then(setJobs)
+    setLoading(true);
+    loadJobs()
       .catch((err) =>
         setError(err instanceof ApiClientError ? err.message : 'Failed to load jobs'),
       )
       .finally(() => setLoading(false));
   }, [retailerId]);
+
+  async function stopJob(jobId) {
+    setBusy(`stop-${jobId}`);
+    setError('');
+    try {
+      await scrapersApi.stopJob(retailerId, jobId);
+      await loadJobs();
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Failed to stop job');
+    } finally {
+      setBusy(null);
+    }
+  }
 
   return (
     <div>
@@ -70,12 +89,23 @@ export function ScraperJobsPage() {
                 r.end_time ? new Date(r.end_time).toLocaleString() : '—',
             },
             {
-              key: 'logs',
-              header: 'Logs',
+              key: 'actions',
+              header: 'Actions',
               render: (r) => (
-                <Link to={`/admin/scrapers/${retailerId}/jobs/${r.id}/logs`}>
-                  <Button variant="secondary">View logs</Button>
-                </Link>
+                <div className="form-actions">
+                  {r.status === 'RUNNING' && (
+                    <Button
+                      variant="danger"
+                      onClick={() => stopJob(r.id)}
+                      loading={busy === `stop-${r.id}`}
+                    >
+                      Stop
+                    </Button>
+                  )}
+                  <Link to={`/admin/scrapers/${retailerId}/jobs/${r.id}/logs`}>
+                    <Button variant="secondary">View logs</Button>
+                  </Link>
+                </div>
               ),
             },
           ]}
