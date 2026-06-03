@@ -10,7 +10,7 @@ export function Header() {
     <header className="site-header">
       <div className="header-inner">
         <Link to="/" className="brand">
-          PriceCompare
+          TechScout
         </Link>
         <nav className="main-nav">
           <NavLink to="/products">Products</NavLink>
